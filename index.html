@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>İş Bankası Buca Şubesi ATM Kuyruk Simülasyonu — Ekonometri Bitirme Ödevi (2000)</title>
+<meta name="description" content="Dokuz Eylül Üniversitesi İİBF Ekonometri Bölümü, Simülasyon Teknikleri — Prof. Dr. Mustafa Güneş. Can Nafiz Çevikel, Gazi Kemal Pervane, Özgen Tonay Mete.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,400&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+:root {
+  --paper: #f4efe4;
+  --paper-warm: #ede6d4;
+  --ink: #1a1f2e;
+  --ink-soft: #3b3f50;
+  --ink-mute: #6b6a66;
+  --rule: #c9c0ab;
+  --accent: #8b2828;
+  --accent-soft: #b8553d;
+  --ochre: #a67c3d;
+  --green: #3d5a3a;
+  --grid: rgba(26, 31, 46, 0.06);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Spectral', Georgia, serif;
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(166, 124, 61, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 90%, rgba(139, 40, 40, 0.05) 0%, transparent 50%),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
+  background-attachment: fixed;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.1 0 0 0 0 0.2 0 0 0 0.4 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.08;
+  mix-blend-mode: multiply;
+  z-index: 1;
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 32px; position: relative; z-index: 2; }
+
+.topbar {
+  border-bottom: 1px solid var(--rule);
+  padding: 14px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: var(--paper-warm);
+  position: relative;
+  z-index: 2;
+}
+.topbar-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.topbar .dot {
+  display: inline-block; width: 6px; height: 6px;
+  background: var(--accent); border-radius: 50%;
+  margin-right: 8px; vertical-align: middle;
+  animation: pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% {opacity:1;} 50% {opacity:0.3;} }
+
+.hero { padding: 90px 0 60px; border-bottom: 1px solid var(--rule); }
+.hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+.hero-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-mute);
+  display: flex; flex-direction: column; gap: 10px;
+  border-left: 1px solid var(--rule);
+  padding-left: 24px; margin-bottom: 40px;
+}
+.hero-meta span strong {
+  color: var(--accent); font-weight: 700;
+  margin-right: 8px; display: inline-block; min-width: 110px;
+}
+
+h1.title {
+  font-family: 'Fraunces', serif;
+  font-variation-settings: 'opsz' 144;
+  font-size: clamp(44px, 6.2vw, 88px);
+  line-height: 0.98; letter-spacing: -0.035em;
+  font-weight: 500; margin-bottom: 32px;
+}
+h1.title em { font-style: italic; color: var(--accent); font-weight: 400; }
+
+.hero-lede {
+  font-family: 'Spectral', serif;
+  font-size: 19px; line-height: 1.55;
+  color: var(--ink-soft); max-width: 46ch; font-weight: 300;
+}
+.hero-lede::first-letter {
+  font-family: 'Fraunces', serif; font-weight: 900;
+  font-size: 58px; float: left; line-height: 0.85;
+  margin: 8px 10px 0 0; color: var(--accent);
+}
+
+.hero-visual {
+  position: relative; height: 420px;
+  background: var(--paper-warm);
+  border: 1px solid var(--rule); overflow: hidden;
+}
+.hero-visual::before {
+  content: "FIG. 01 — M/M/c KUYRUK MODELİ";
+  position: absolute; top: 16px; left: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.1em; color: var(--ink-mute); z-index: 3;
+}
+.hero-visual::after {
+  content: "λ≈68s · μ≈58s";
+  position: absolute; bottom: 16px; right: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.1em; color: var(--ink-mute); z-index: 3;
+}
+.queue-svg { width: 100%; height: 100%; display: block; }
+
+nav.primary {
+  border-bottom: 1px solid var(--rule);
+  padding: 18px 0;
+  position: sticky; top: 0; z-index: 10;
+  backdrop-filter: blur(8px);
+  background: rgba(244, 239, 228, 0.92);
+}
+nav.primary ul {
+  list-style: none; display: flex; gap: 36px;
+  justify-content: center; flex-wrap: wrap;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase;
+}
+nav.primary a {
+  color: var(--ink-soft); text-decoration: none;
+  padding-bottom: 4px; border-bottom: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+nav.primary a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+nav.primary a .num { color: var(--ochre); margin-right: 8px; }
+
+section.block { padding: 80px 0; border-bottom: 1px solid var(--rule); }
+
+.section-head {
+  display: grid; grid-template-columns: 160px 1fr;
+  gap: 40px; margin-bottom: 48px; align-items: baseline;
+}
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--accent); font-weight: 700;
+  padding-top: 12px; border-top: 2px solid var(--accent);
+}
+h2 {
+  font-family: 'Fraunces', serif;
+  font-variation-settings: 'opsz' 96;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 500; line-height: 1.05; letter-spacing: -0.02em;
+}
+h2 em { font-style: italic; color: var(--accent); }
+
+h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 26px; font-weight: 500; letter-spacing: -0.015em;
+  margin: 48px 0 18px; color: var(--ink);
+}
+h3 em { font-style: italic; color: var(--accent); }
+
+.section-body { display: grid; grid-template-columns: 160px 1fr; gap: 40px; }
+.section-label.secondary { border-top-color: var(--ochre); color: var(--ochre); }
+.section-content { max-width: 72ch; }
+.section-content p { margin-bottom: 1.2em; color: var(--ink-soft); }
+.section-content p + p { text-indent: 1.8em; }
+.section-content ul, .section-content ol { margin: 0 0 1.4em 1.4em; color: var(--ink-soft); }
+.section-content li { margin-bottom: 0.5em; }
+
+.pullquote {
+  font-family: 'Fraunces', serif; font-style: italic;
+  font-size: 28px; line-height: 1.25; color: var(--ink);
+  max-width: 22ch; padding: 32px 0 32px 32px;
+  border-left: 3px solid var(--accent);
+  margin: 40px 0; position: relative;
+}
+.pullquote::before {
+  content: "\201C"; font-family: 'Fraunces', serif;
+  font-size: 90px; font-weight: 900; color: var(--accent);
+  position: absolute; top: -10px; left: 16px;
+  line-height: 1; opacity: 0.25;
+}
+
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+  border: 1px solid var(--ink); margin: 24px 0 40px;
+}
+.kpi { padding: 28px 24px; border-right: 1px solid var(--rule); background: var(--paper-warm); }
+.kpi:last-child { border-right: none; }
+.kpi-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--ink-mute); margin-bottom: 8px;
+}
+.kpi-value {
+  font-family: 'Fraunces', serif;
+  font-size: 40px; font-weight: 500; line-height: 1;
+  color: var(--ink); letter-spacing: -0.02em;
+}
+.kpi-value em { color: var(--accent); font-style: normal; }
+.kpi-unit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.08em;
+  color: var(--ink-mute); margin-top: 6px;
+}
+
+.formula {
+  background: var(--paper-warm); border: 1px solid var(--rule);
+  padding: 24px 32px; margin: 24px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px; color: var(--ink); line-height: 1.7;
+}
+.formula .label {
+  font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 10px;
+}
+
+pre.code-block {
+  background: #1a1f2e; color: #e8dcbc;
+  padding: 36px 32px 28px; margin: 24px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px; line-height: 1.75;
+  overflow-x: auto; position: relative; border: 1px solid var(--ink);
+  white-space: pre;
+}
+pre.code-block::before {
+  content: "isbankmodel.gps · GPSS/H";
+  position: absolute; top: 10px; right: 16px;
+  font-size: 10px; letter-spacing: 0.1em; color: var(--ochre);
+}
+pre.code-block .cmt { color: #8b8573; font-style: italic; }
+pre.code-block .kw  { color: #d67a5a; font-weight: 700; }
+pre.code-block .lbl { color: #d4a560; }
+pre.code-block .num { color: #7fb069; }
+pre.code-block .hdr { color: #6b6a66; }
+
+.chart-wrap {
+  background: var(--paper-warm); border: 1px solid var(--rule);
+  padding: 40px 32px 24px; margin: 24px 0; position: relative;
+}
+.chart-wrap::before {
+  content: "FIG. 02 — KUYRUK UZUNLUĞU DAĞILIMI";
+  position: absolute; top: 12px; left: 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.1em; color: var(--ink-mute);
+}
+.chart-wrap canvas { max-height: 360px; }
+
+table.data {
+  width: 100%; border-collapse: collapse; margin: 24px 0;
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+}
+table.data th, table.data td {
+  padding: 12px 16px; text-align: left;
+  border-bottom: 1px solid var(--rule);
+}
+table.data th {
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent); border-bottom: 2px solid var(--ink);
+  border-top: 2px solid var(--ink); font-weight: 700;
+}
+table.data tr:hover td { background: rgba(166, 124, 61, 0.06); }
+table.data td.num { text-align: right; color: var(--ink); }
+
+.timeline {
+  display: flex; flex-direction: column;
+  border-top: 1px solid var(--ink); margin-top: 24px;
+}
+.phase {
+  display: grid; grid-template-columns: 60px 1fr 140px;
+  gap: 32px; padding: 26px 0;
+  border-bottom: 1px solid var(--rule); align-items: center;
+  transition: background 0.25s ease;
+}
+.phase:hover { background: rgba(166, 124, 61, 0.08); }
+.phase-num {
+  font-family: 'Fraunces', serif; font-variation-settings: 'opsz' 144;
+  font-size: 42px; font-weight: 300; color: var(--ochre);
+  font-style: italic; line-height: 1;
+}
+.phase-desc { font-family: 'Spectral', serif; font-size: 17px; line-height: 1.4; color: var(--ink); }
+.phase-weeks {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-soft); text-align: right;
+}
+.phase-weeks .bar {
+  display: inline-block; height: 3px; background: var(--accent);
+  vertical-align: middle; margin-right: 10px;
+}
+.phase-total {
+  display: grid; grid-template-columns: 60px 1fr 140px;
+  gap: 32px; padding: 26px 0;
+  border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink);
+  align-items: center; font-family: 'Fraunces', serif;
+}
+.phase-total .label { grid-column: 2; font-size: 20px; font-style: italic; font-weight: 500; }
+.phase-total .value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px; font-weight: 700; letter-spacing: 0.1em;
+  color: var(--accent); text-align: right;
+}
+
+.authors { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 24px; }
+.author { padding: 28px 0; border-top: 2px solid var(--ink); }
+.author-role {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--ink-mute); margin-bottom: 8px;
+}
+.author-name {
+  font-family: 'Fraunces', serif;
+  font-size: 22px; font-weight: 500; line-height: 1.2; letter-spacing: -0.015em;
+}
+.author-name em { font-style: italic; color: var(--accent); }
+.author-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--ink-mute);
+  margin-top: 8px; letter-spacing: 0.05em;
+}
+
+.refs { list-style: none; padding: 0; margin: 24px 0 0; border-top: 1px solid var(--ink); }
+.refs li {
+  padding: 14px 0; border-bottom: 1px solid var(--rule);
+  display: grid; grid-template-columns: 40px 1fr; gap: 16px;
+  font-family: 'Spectral', serif; color: var(--ink-soft); font-size: 15px;
+}
+.refs li::before {
+  content: attr(data-n);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--ochre); padding-top: 3px;
+}
+
+.ack { background: var(--ink); color: var(--paper); padding: 80px 0; }
+.ack-inner {
+  max-width: 1200px; margin: 0 auto; padding: 0 32px;
+  display: grid; grid-template-columns: 160px 1fr; gap: 40px;
+}
+.ack .section-label { color: var(--accent-soft); border-top-color: var(--accent-soft); }
+.ack blockquote {
+  font-family: 'Fraunces', serif; font-style: italic;
+  font-size: clamp(22px, 2.8vw, 32px); line-height: 1.35;
+  font-weight: 300; color: var(--paper);
+  letter-spacing: -0.01em; max-width: 28ch; position: relative;
+}
+.ack blockquote::before {
+  content: "\201C"; font-family: 'Fraunces', serif;
+  font-size: 120px; font-weight: 900; color: var(--accent-soft);
+  position: absolute; top: -40px; left: -48px;
+  line-height: 1; opacity: 0.4;
+}
+.ack cite {
+  display: block; margin-top: 28px;
+  font-family: 'JetBrains Mono', monospace; font-style: normal;
+  font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--accent-soft);
+}
+
+footer {
+  padding: 48px 0 40px; border-top: 2px solid var(--ink);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.1em;
+  color: var(--ink-mute); text-transform: uppercase;
+}
+footer .footer-grid { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 24px; }
+footer .bookmark { color: var(--accent); }
+footer kbd {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--paper-warm); border: 1px solid var(--rule);
+  border-bottom-width: 2px; padding: 2px 6px;
+  font-size: 10px; border-radius: 2px; color: var(--ink);
+}
+
+.customer { animation: moveQueue 6s linear infinite; }
+.c2 { animation-delay: -1.2s; }
+.c3 { animation-delay: -2.4s; }
+.c4 { animation-delay: -3.6s; }
+.c5 { animation-delay: -4.8s; }
+@keyframes moveQueue {
+  0%   { transform: translateX(0);    opacity: 0; }
+  5%   { opacity: 1; }
+  75%  { transform: translateX(320px); opacity: 1; }
+  85%  { opacity: 0; }
+  100% { transform: translateX(380px); opacity: 0; }
+}
+.atm-blink { animation: blink 1.8s ease-in-out infinite; }
+@keyframes blink { 0%,100% {opacity:1;} 50% {opacity:0.4;} }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.reveal { animation: fadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.reveal-d1 { animation-delay: 0.1s; }
+.reveal-d2 { animation-delay: 0.25s; }
+
+@media (max-width: 900px) {
+  .hero-grid { grid-template-columns: 1fr; gap: 48px; }
+  .hero-visual { height: 300px; }
+  .section-head, .section-body, .ack-inner { grid-template-columns: 1fr; gap: 20px; }
+  .authors { grid-template-columns: 1fr; }
+  nav.primary ul { gap: 20px; justify-content: flex-start; }
+  .phase, .phase-total { grid-template-columns: 40px 1fr auto; gap: 16px; }
+  .phase-num { font-size: 28px; }
+  .ack blockquote::before { left: -8px; top: -50px; font-size: 80px; }
+  .container { padding: 0 20px; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .kpi:nth-child(2) { border-right: none; }
+  .kpi:nth-child(1), .kpi:nth-child(2) { border-bottom: 1px solid var(--rule); }
+  .hero-meta span strong { min-width: auto; }
+  #calcResults { grid-template-columns: repeat(3, 1fr) !important; }
+  #calcResults .kpi:nth-child(3) { border-right: none; }
+  #hesap [style*="grid-template-columns:1fr 1fr 1fr"] { grid-template-columns: 1fr !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="container topbar-inner">
+    <span><span class="dot"></span>Ekonometri 4. Sınıf · Bitirme Ödevi · Mayıs 2000</span>
+    <span>Dokuz Eylül Üniversitesi · İİBF</span>
+    <span>BUCA / İZMİR</span>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div class="reveal reveal-d1">
+        <div class="hero-meta">
+          <span><strong>DERS</strong>Simülasyon Teknikleri</span>
+          <span><strong>BÖLÜM</strong>Ekonometri · VII. Yarıyıl</span>
+          <span><strong>FAKÜLTE</strong>İktisadi ve İdari Bilimler</span>
+          <span><strong>DANIŞMAN</strong>Prof. Dr. Mustafa Güneş</span>
+        </div>
+
+        <h1 class="title">
+          İş Bankası Buca Şubesi ATM'lerinde <em>kuyruk teorisi</em> ile modelleme ve bilgisayar ortamında simülasyon.
+        </h1>
+
+        <p class="hero-lede">
+          Bir şube ATM hattında oluşan müşteri kuyruklarını olasılık dağılımlarıyla tanımlayıp; kurulan modeli DS ve GPSS paket programlarında çalıştırarak ortalama bekleme süresi, sistem kullanım oranı ve servis yeterliliği açısından değerlendirmek amacıyla hazırlanan uygulamalı bir bitirme çalışması.
+        </p>
+      </div>
+
+      <div class="hero-visual reveal reveal-d2">
+        <svg class="queue-svg" viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <pattern id="graph" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#c9c0ab" stroke-width="0.4"/>
+            </pattern>
+          </defs>
+          <rect width="500" height="400" fill="url(#graph)"/>
+          <line x1="40" y1="260" x2="460" y2="260" stroke="#1a1f2e" stroke-width="1.2"/>
+
+          <g transform="translate(380, 150)">
+            <rect x="0" y="0" width="60" height="110" fill="#1a1f2e"/>
+            <rect x="8" y="10" width="44" height="30" fill="#3d5a3a" class="atm-blink"/>
+            <circle cx="14" cy="55" r="2.5" fill="#a67c3d"/>
+            <circle cx="22" cy="55" r="2.5" fill="#a67c3d"/>
+            <circle cx="30" cy="55" r="2.5" fill="#a67c3d"/>
+            <rect x="10" y="70" width="40" height="8" fill="#8b2828"/>
+            <rect x="12" y="90" width="36" height="4" fill="#c9c0ab"/>
+            <text x="30" y="130" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#1a1f2e" letter-spacing="1">ATM</text>
+          </g>
+
+          <g>
+            <circle class="customer"    cx="60" cy="250" r="10" fill="#8b2828"/>
+            <circle class="customer c2" cx="60" cy="250" r="10" fill="#a67c3d"/>
+            <circle class="customer c3" cx="60" cy="250" r="10" fill="#3d5a3a"/>
+            <circle class="customer c4" cx="60" cy="250" r="10" fill="#1a1f2e"/>
+            <circle class="customer c5" cx="60" cy="250" r="10" fill="#b8553d"/>
+          </g>
+
+          <circle cx="60"  cy="250" r="8" fill="none" stroke="#1a1f2e" stroke-width="1" stroke-dasharray="2 2"/>
+          <circle cx="110" cy="250" r="8" fill="none" stroke="#1a1f2e" stroke-width="1" stroke-dasharray="2 2"/>
+          <circle cx="160" cy="250" r="8" fill="none" stroke="#1a1f2e" stroke-width="1" stroke-dasharray="2 2"/>
+
+          <text x="60"  y="290" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#6b6a66" letter-spacing="1">λ · VARIŞ</text>
+          <text x="410" y="290" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" fill="#6b6a66" letter-spacing="1">μ · SERVİS</text>
+
+          <path d="M 85 250 L 355 250" stroke="#1a1f2e" stroke-width="0.6" fill="none" stroke-dasharray="3 3"/>
+          <path d="M 350 245 L 360 250 L 350 255" stroke="#1a1f2e" stroke-width="1" fill="none"/>
+
+          <g transform="translate(60, 60)" opacity="0.5">
+            <path d="M 0 50 Q 20 50 25 30 Q 30 10 40 10 Q 50 10 55 30 Q 60 50 80 50" fill="none" stroke="#8b2828" stroke-width="1"/>
+            <text x="40" y="68" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="7" fill="#6b6a66" letter-spacing="1">POISSON GELİŞLER</text>
+          </g>
+          <g transform="translate(180, 60)" opacity="0.5">
+            <path d="M 0 50 Q 15 50 20 20 Q 40 5 60 10 Q 75 20 80 50" fill="none" stroke="#3d5a3a" stroke-width="1"/>
+            <text x="40" y="68" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="7" fill="#6b6a66" letter-spacing="1">ÜSSEL SERVİS</text>
+          </g>
+          <text x="44"  y="16"  font-family="JetBrains Mono, monospace" font-size="8" fill="#6b6a66" letter-spacing="1">y = f(t)</text>
+          <text x="456" y="392" font-family="JetBrains Mono, monospace" font-size="8" fill="#6b6a66" letter-spacing="1" text-anchor="end">t · sn</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</header>
+
+<nav class="primary">
+  <div class="container">
+    <ul>
+      <li><a href="#giris"><span class="num">01</span>Giriş</a></li>
+      <li><a href="#simulasyon"><span class="num">02</span>Simülasyon</a></li>
+      <li><a href="#kuyruk"><span class="num">03</span>Kuyruk Teorisi</a></li>
+      <li><a href="#metodoloji"><span class="num">04</span>Metodoloji</a></li>
+      <li><a href="#veri"><span class="num">05</span>Veri &amp; Analiz</a></li>
+      <li><a href="#analiz"><span class="num">06</span>Dağılım Testi</a></li>
+      <li><a href="#model"><span class="num">07</span>Model</a></li>
+      <li><a href="#problemler"><span class="num">08</span>Problemler</a></li>
+      <li><a href="#sonuc"><span class="num">09</span>Sonuç</a></li>
+      <li><a href="#hesap"><span class="num">▪</span>M/M/c Hesap</a></li>
+    </ul>
+  </div>
+</nav>
+
+<section class="block" id="giris">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-label">§ 01 — Giriş</div>
+      <h2>Uygulamaya yönelik bir <em>bitirme çalışması.</em></h2>
+    </div>
+    <div class="section-body">
+      <div class="section-label secondary">Çalışma Konusu</div>
+      <div class="section-content">
+        <p>Ekonometri bölümünün 7. yarıyılında gördüğümüz "Simülasyon" dersinin uygulamaya yönelik çalışması olarak İş Bankası Buca şubesinin ATM'lerinde oluşan kuyruğu inceleyerek makinelerin yeterliliği açısından bir değerlendirme yapmaya çalıştık.</p>
+        <p>Günümüzde ilerleyen teknolojiyle birlikte hizmet ve üretim kalitesini artırmaya yönelik çalışmalar hız kazandı. Amaç: en iyi ve sağlıklı hizmet, minimum hatayla maksimum üretim seviyesi, bunları yaparken maliyetleri minimize etmek. Bu doğrultuda, bir takım sorunlarla karşılaşıp ders çıkarmak yerine, sorunlarla karşılaşmadan bir model oluşturup sonuçları önceden görerek hareket etme çabasına girilmiştir.</p>
+        <p>Bu çalışmamızla böyle bir yaklaşımın küçük ama tam anlamıyla uygulanmış bir örneğini sunuyoruz.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="simulasyon">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-label">§ 02 — Kavramlar</div>
+      <h2>Simülasyon <em>nedir?</em></h2>
+    </div>
+    <div class="section-body">
+      <div class="section-label secondary">Benzetim</div>
+      <div class="section-content">
+        <p>Benzetim, gerçek bir dünya süreci veya sisteminin işletilmesinin zaman üzerinden taklit edilmesidir (Banks &amp; Carson, 1984). Sistem objeleri arasında tanımlanmış ilişkileri içeren bir süreç veya sistemin modelidir.</p>
+        <div class="pullquote">Benzetim, taklit edilen gerçek bir olayın bilgisayar yardımıyla modellenmesidir.</div>
+        <p>Endüstri ve sanayide modellerin kullanılma sebepleri maliyetlerinin düşüklüğü, tehlikeli olmayışları ve gerçek sistemler üzerinde deney yapmanın bazen imkansızlaşmasıdır. Gerçek sistemlere benzer modeller üzerinde deney yapmak, para ve zaman tasarrufu demektir.</p>
+        <p>Zamanla veya rasgele değişen sistemler için benzetim kullanılabilir. Örneğin bir benzin istasyonuna gelen ve giden araçların zamana bağlı değişimi: sonraki aracın ne zaman geleceği bilinmez — rasgele bir durum vardır. Karışık dinamik sistemlerin teorik modellenmesi birçok basitleştirme gerektirir; bu nedenle sonuçlar geçerli olmayabilir. İşte benzetim burada devreye girer.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="kuyruk">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-label">§ 03 — Teorik Arka Plan</div>
+      <h2>Kuyruk <em>teorisi.</em></h2>
+    </div>
+    <div class="section-body">
+      <div class="section-label secondary">Bekleme Olayı</div>
+      <div class="section-content">
+        <p>Bir süper markette ödeme kasası önünde bekleyen müşteriler, trafik ışığındaki araçlar, bir poliklinikte bekleyen hastalar, bir havaalanında bekleyen uçaklar ve elbette bir bankamatik önündeki müşteriler — bu durumların ortak noktası bekleme olayıdır. Beklemeden sahip olabilmek arzu edilir; fakat bekleme yaşantının bir parçasıdır. Amaç onu minimize etmektir.</p>
+
+        <h3>Kendall <em>notasyonu</em></h3>
+        <p>Paralel servisçili kuyruk sistemleri aşağıdaki üniversal notasyonla standartlaştırılmıştır:</p>
+
+        <div class="formula">
+          <div class="label">KENDALL–LEE–TAHA</div>
+          (a / b / c) : (d / e / f)<br><br>
+          <span style="color:var(--ochre);">a</span> · gelişlerin dağılımı<br>
+          <span style="color:var(--ochre);">b</span> · servis süresinin dağılımı<br>
+          <span style="color:var(--ochre);">c</span> · paralel servisçi sayısı<br>
+          <span style="color:var(--ochre);">d</span> · servis disiplini (FIFO, LIFO, SIRO)<br>
+          <span style="color:var(--ochre);">e</span> · sistem kapasitesi<br>
+          <span style="color:var(--ochre);">f</span> · kaynak kapasitesi
+        </div>
+
+        <p>Bu notasyonda gelişlerin ve gidişlerin harf sembolleri şöyle değiştirilir: <strong>M</strong> (Poisson / Markovyan), <strong>D</strong> (deterministik), <strong>E<sub>k</sub></strong> (Erlang), <strong>G</strong> (genel dağılım).</p>
+
+        <h3>(M / M / c) : (GD / ∞ / ∞) <em>modeli</em></h3>
+        <p>Hem gelişler hem gidişler Poisson dağılımına göre gerçekleşir; c paralel servisçi bulunur. Eğer sistemdeki müşteri sayısı n ≥ c ise birleştirilmiş servis hızı cμ; aksi halde nμ'dir.</p>
+
+        <div class="formula">
+          <div class="label">TEMEL PERFORMANS ÖLÇÜLERİ</div>
+          P<sub>n</sub> &nbsp;= &nbsp;sistemde n müşteri olma olasılığı<br>
+          L<sub>s</sub> &nbsp;= &nbsp;sistemdeki beklenen müşteri sayısı<br>
+          L<sub>q</sub> &nbsp;= &nbsp;kuyruktaki beklenen müşteri sayısı<br>
+          W<sub>s</sub> &nbsp;= &nbsp;sistemdeki umulan bekleme süresi<br>
+          W<sub>q</sub> &nbsp;= &nbsp;kuyrukta umulan bekleme süresi<br><br>
+          L<sub>s</sub> = λ · W<sub>s</sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;L<sub>q</sub> = λ · W<sub>q</sub>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;W<sub>s</sub> = W<sub>q</sub> + 1/μ
+        </div>
+
+        <p>Bu olasılıklarla performansın bütün temel ölçüleri elde edilebilir. Çalışmamızda da bu çerçeve kullanılmıştır.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="metodoloji">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-label">§ 04 — Yöntem</div>
+      <h2>Konu seçimi ve <em>hazırlık.</em></h2>
+    </div>
+    <div class="section-body">
+      <div class="section-label secondary">Saha Çalışması</div>
+      <div class="section-content">
+        <p>Grubumuzu kurduktan sonra kısa zamanda inceleyebileceğimiz kadar basit ama bir o kadar da kapsamlı bir konu seçmek istedik. İş Bankası'nın Buca şubesinin yan cephesinde bulunan iki ATM'yi gözlemlemek, hem yoğun bir şube olması hem de gözlemlenmek istenen türden kuyrukların oluşması sebebiyle uygun göründü.</p>
+        <p>Veri toplamayı kolaylaştırmak için özel bir şablon hazırladık. Bu şablon üzerinde verileri kaydederken yanlışları minimize etme imkanımız vardı. Bir hafta boyunca her gün sabah, öğlen ve akşam üzerleri olmak üzere gözlem zamanları belirledik.</p>
+
+        <div class="pullquote">Bir ATM kuyruğuna giren bazen sırayı değiştiriyor, bazen sıkılıp gidiyordu. Sonunda kameraya başvurduk.</div>
+
+        <p>Kayıt sırasında bir takım problemlerle karşılaştık: iki ATM yan yana olduğu için kuyruk değişimlerini takip etmek zordu, hava şartları gözlemi zorlaştırıyordu, meraklı insanlar soru soruyordu ve uzun süre gözlem yapmak yorucuydu. Çözüm olarak karşı dükkanlardan birine yerleştirdiğimiz bir kamerayla kuyruğun görüntüsünü aldık; ardından kayıttan ayrıntılı veri girişini yaptık.</p>
+
+        <p>Veriler önce Excel'e aktarıldı ve <strong>λ</strong> (varış hızı) ile <strong>μ</strong> (servis hızı) parametreleri hesaplandı; aynı istatistikler SPSS paket programıyla da teyit edildi. Excel'den elde edilen bu parametreler DS ve GPSS simülasyon paketlerinde modelin girdisi olarak kullanıldı.</p>
+
+        <h3>Çalışma <em>takvimi</em></h3>
+        <div class="timeline">
+          <div class="phase">
+            <div class="phase-num">01</div>
+            <div class="phase-desc">Modelin özelliklerinin, bileşenlerinin tanımlanması ve örnek alınacak bölgenin etüdü</div>
+            <div class="phase-weeks"><span class="bar" style="width: 24px;"></span>2 Hafta</div>
+          </div>
+          <div class="phase">
+            <div class="phase-num">02</div>
+            <div class="phase-desc">Örnek alma işlemi için form belgesinin oluşturulması ve örneklerin alınması</div>
+            <div class="phase-weeks"><span class="bar" style="width: 36px;"></span>3 Hafta</div>
+          </div>
+          <div class="phase">
+            <div class="phase-num">03</div>
+            <div class="phase-desc">Alınan verilerin değerlendirilmesi; Excel ve SPSS'e aktarılarak istatistiki bilginin elde edilmesi</div>
+            <div class="phase-weeks"><span class="bar" style="width: 24px;"></span>2 Hafta</div>
+          </div>
+          <div class="phase">
+            <div class="phase-num">04</div>
+            <div class="phase-desc">Modelin kurulması ve DS paket programıyla sonuçlarının bulunması, ekran çıktısı</div>
+            <div class="phase-weeks"><span class="bar" style="width: 12px;"></span>1 Hafta</div>
+          </div>
+          <div class="phase">
+            <div class="phase-num">05</div>
+            <div class="phase-desc">Modelin GPSS paket programıyla simüle edilmesi</div>
+            <div class="phase-weeks"><span class="bar" style="width: 12px;"></span>1 Hafta</div>
+          </div>
+          <div class="phase">
+            <div class="phase-num">06</div>
+            <div class="phase-desc">Raporun ve sonuçların internet ortamında herkesin ulaşabileceği şekilde sunulması</div>
+            <div class="phase-weeks"><span class="bar" style="width: 12px;"></span>1 Hafta</div>
+          </div>
+          <div class="phase-total">
+            <div class="label">Toplam süre</div>
+            <div class="value">▪ 8 Hafta</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="veri">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-label">§ 05 — Bulgular</div>
+      <h2>Veri ve <em>istatistik.</em></h2>
+    </div>
+    <div class="section-body">
+      <div class="section-label secondary">n = 266</div>
+      <div class="section-content" style="max-width: none;">
+
+        <p style="max-width: 72ch;">Şablondan girilen <strong>266 gözlem</strong> üzerinden gelişler arası süre, servis süresi ve eş zamanlı kuyruk uzunluğu ölçüldü. Aşağıda çalışmanın temel parametreleri verilmiştir.</p>
+
+        <div class="kpi-grid">
+          <div class="kpi">
+            <div class="kpi-label">1/λ · Varışlar arası</div>
+            <div class="kpi-value"><em>68.1</em></div>
+            <div class="kpi-unit">SANİYE · ORTALAMA</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">1/μ · Servis süresi</div>
+            <div class="kpi-value"><em>57.7</em></div>
+            <div class="kpi-unit">SANİYE · ORTALAMA</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">λ · Varış hızı</div>
+            <div class="kpi-value"><em>52.8</em></div>
+            <div class="kpi-unit">MÜŞTERİ / SAAT</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">ρ · Kullanım (c=2)</div>
+            <div class="kpi-value"><em>0.42</em></div>
+            <div class="kpi-unit">λ / (c·μ)</div>
+          </div>
+        </div>
+
+        <p style="max-width: 72ch;">Kuyruk uzunluğu dağılımı hem saha gözlemlerinden hem de DS simülasyonundan elde edilmiştir. Aşağıdaki grafik iki kaynağı karşılaştırır: saha verisi daha hafif, DS simülasyonu ise daha muhafazakar (kötümser) bir kuyruk uzunluğu öngörür.</p>
+
+        <div class="chart-wrap">
+          <canvas id="queueChart"></canvas>
+        </div>
+
+        <table class="data">
+          <thead>
+            <tr>
+              <th>Kuyruk Uzunluğu</th>
+              <th>M/M/2 Teorik</th>
+              <th>Saha Gözlemi (n=266)</th>
+              <th>DS Simülasyonu</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>0 kişi</td><td class="num">40.5%</td><td class="num">33.5%</td><td class="num">24%</td></tr>
+            <tr><td>1 kişi</td><td class="num">34.3%</td><td class="num">49.6%</td><td class="num">29%</td></tr>
+            <tr><td>2 kişi</td><td class="num">14.5%</td><td class="num">12.8%</td><td class="num">18%</td></tr>
+            <tr><td>3 kişi</td><td class="num">6.2%</td><td class="num">3.0%</td><td class="num">11%</td></tr>
+            <tr><td>4 kişi</td><td class="num">2.6%</td><td class="num">1.1%</td><td class="num">6%</td></tr>
+            <tr><td>5 kişi</td><td class="num">1.1%</td><td class="num">0%</td><td class="num">4%</td></tr>
+            <tr style="border-top:2px solid var(--ink);font-weight:600;"><td>P(≤3)</td><td class="num">95.5%</td><td class="num">98.9%</td><td class="num">82%</td></tr>
+          </tbody>
+        </table>
+
+        <p style="max-width: 72ch;">Hem saha hem simülasyon, kuyruğun yüzde 80'in üzerinde bir olasılıkla 3 kişi veya altında kaldığını teyit eder. Bu, bankanın strateji seçiminde belirleyici olacak bir kesim noktasıdır.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DAĞILIM ANALİZİ -->
+<section class="block" id="analiz">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-label">§ 06 — 2026 Yeniden Hesaplama</div>
+      <h2>Dağılım testi ve <em>Little yasası.</em></h2>
+    </div>
+    <div class="section-body">
+      <div class="section-label secondary">KS Testi</div>
+      <div class="section-content" style="max-width: none;">
+
+        <p style="max-width: 72ch;">M/M/c modelinin temelinde iki varsayım yatar: gelişlerin Poisson dağılımına (eşdeğer olarak gelişler arası sürenin üstel dağılıma) ve servis sürelerinin de üstel dağılıma uyması. Kolmogorov–Smirnov testi ile bu varsayımları saha verisine karşı sınadık.</p>
+
+        <div class="kpi-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="kpi">
+            <div class="kpi-label">Gelişler arası süre · KS Testi</div>
+            <div class="kpi-value" style="font-size:28px;"><em>D = 0.074</em></div>
+            <div class="kpi-unit">p = 0.101 · CV = 0.97 · ✓ H₀ RET EDİLEMEZ</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Servis süresi · KS Testi</div>
+            <div class="kpi-value" style="font-size:28px;"><em>D = 0.233</em></div>
+            <div class="kpi-unit">p ≈ 0.000 · CV = 0.74 · ✗ H₀ REDDEDİLİR</div>
+          </div>
+        </div>
+
+        <p style="max-width: 72ch;">Gelişler arası süre üstel dağılım varsayımını karşılıyor (CV=0.97 ≈ 1, KS p=0.101 > 0.05) — Poisson gelişler varsayımı desteklenir. Ancak servis süresi üstel dağılıma uymuyor (CV=0.74, KS p≈0.000). Bu beklenen bir sonuçtur: gerçek ATM işlemleri bakiye sorgulama (çok kısa) ile para transferi (uzun) arasında değişir ve bu karışım üstel dağılımdan daha dar kuyruklu bir dağılım üretir. Buna rağmen M/M/c modeli pratik bir yaklaşım olarak kullanılabilir.</p>
+
+        <h3>Q–Q grafiği: <em>gelişler arası süre</em></h3>
+        <div class="chart-wrap">
+          <canvas id="qqIatChart"></canvas>
+        </div>
+
+        <h3>Q–Q grafiği: <em>servis süresi</em></h3>
+        <div class="chart-wrap">
+          <canvas id="qqSrvChart"></canvas>
+        </div>
+
+        <p style="max-width: 72ch;">Q–Q grafiklerinde noktaların 45° çizgisinden sapması, özellikle üst kuyruklarda (uzun sürelerde) belirgindir. Gelişler arası süre nispeten iyi uyum gösterirken, servis süresi daha belirgin sapma gösterir — kısa ve uzun işlemlerin karışımı, üstel varsayıma tam uymayan bimodal bir davranışa işaret eder.</p>
+
+        <h3>Kuyruk uzunluğu <em>zaman serisi</em></h3>
+        <div class="chart-wrap">
+          <canvas id="tsChart"></canvas>
+        </div>
+
+        <h3>Little yasası <em>kontrolü</em></h3>
+        <p style="max-width: 72ch;">Little yasası (L = λW) herhangi bir durağan kuyruk sistemi için geçerlidir ve dağılım varsayımından bağımsızdır. Saha verisinden kontrol ettik:</p>
+
+        <div class="formula">
+          <div class="label">LITTLE YASASI: Ls = λ · Ws</div>
+          Gözlenen ort. kuyruk uzunluğu (SKS):  L<sub>obs</sub> = 0.887 müşteri<br>
+          Gözlenen ort. bekleme (kuyruk):  W<sub>q</sub> = 39.8 saniye<br>
+          Gözlenen ort. bekleme (sistem):  W<sub>s</sub> = 97.5 saniye<br><br>
+          λ × W<sub>s</sub> = 0.0147 × 97.5 = <strong>1.431</strong> müşteri<br><br>
+          Sapma: %61 — çünkü SKS anlık kuyruk uzunluğunu (varış anında)<br>
+          ölçer, oysa L<sub>s</sub> zaman-ağırlıklı ortalamadır. Kısa gözlem<br>
+          penceresi ve ölçüm yöntemi farkı beklenen bir sapmadır.
+        </div>
+
+        <h3>Üçlü karşılaştırma: <em>Teorik · Gözlem · DS</em></h3>
+        <div class="chart-wrap">
+          <canvas id="tripleChart"></canvas>
+        </div>
+
+        <p style="max-width: 72ch;">Üç model arasında tutarlı bir hiyerarşi vardır: M/M/2 teorik çözümü en iyimser (P₀=40.5%), saha gözlemi orta düzey (P₀=33.5%), DS simülasyonu ise en muhafazakar (P₀=24%) tahminleri verir. Teorik çözümün daha iyimser olması beklenir; çünkü gerçek saha koşullarındaki sapmalar (toplu gelişler, kuyruk değiştirme, gün içi talep dalgalanmaları) modelde yer almaz. DS simülasyonunun en kötümser olmasının nedeni ise muhtemelen farklı bir parametre seti veya uzun koşturma süresiyle elde edilen denge (steady-state) değerlerinin kullanılmasıdır.</p>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="model">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-label">§ 07 — GPSS</div>
+      <h2>Model ve <em>simülasyon kodu.</em></h2>
+    </div>
+    <div class="section-body">
+      <div class="section-label secondary">GPSS/H</div>
+      <div class="section-content" style="max-width: none;">
+        <p style="max-width: 72ch;">Aşağıda, İş Bankası ATM sisteminin GPSS dilinde kurulmuş asıl modeli yer almaktadır. <code>GENERATE 68</code> ifadesi ortalama 68 saniyelik müşteri gelişini; <code>ADVANCE 114</code> ise servis süresini modellemektedir. Tek kanallı bir <strong>M/M/1</strong> yapısıdır; iki ATM, birleştirilmiş servis davranışıyla tek sunucu olarak temsil edilmiştir.</p>
+
+<pre class="code-block"><span class="hdr">*****************************************************************
+*                                                               *
+*               İŞBANKASI  ATM  Simulasyonu                     *
+*                                                               *
+*****************************************************************</span>
+     <span class="kw">GENERATE</span>  <span class="num">68</span>      <span class="cmt">;Müşteri geliş zamanı (λ)</span>
+     <span class="kw">QUEUE</span>     <span class="lbl">ATM</span>     <span class="cmt">;Sisteme giriş.</span>
+     <span class="kw">SEIZE</span>     <span class="lbl">ATM</span>     <span class="cmt">;ATM boşsa işleme gir, değilse kuyruğa gir.</span>
+     <span class="kw">DEPART</span>    <span class="lbl">ATM</span>     <span class="cmt">;Bekleme zamanını durdur.</span>
+     <span class="kw">ADVANCE</span>   <span class="num">114</span>     <span class="cmt">;İşlem zamanı (μ)</span>
+     <span class="kw">RELEASE</span>   <span class="lbl">ATM</span>     <span class="cmt">;İşlem bitti. ATM'yi terket.</span>
+     <span class="kw">TERMINATE</span> <span class="num">1</span>       <span class="cmt">;Müşteri gider.</span></pre>
+
+        <p style="max-width: 72ch;">Model son derece sadedir; GPSS'in gücü sözdizimsel zenginlikten değil, bu sade blokların çok sayıda müşteri akışıyla koşturulmasından gelir. Modelin DS çıktısı ve SPSS istatistikleri bir arada yorumlandığında şubenin 2 ATM kapasitesinin bu yoğunluk bandı için yeterli kaldığı sonucuna varılmıştır.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="problemler">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-label">§ 08 — Karşılaşılanlar</div>
+      <h2>Saha çalışmasının <em>zorlukları.</em></h2>
+    </div>
+    <div class="section-body">
+      <div class="section-label secondary">Problemler</div>
+      <div class="section-content">
+        <h3>Veri toplama <em>problemleri</em></h3>
+        <p>İki ATM yan yana olduğu için kuyruğa girip çıkanı takip etmek güçtü. Bazı müşteriler eşit sayıda kişi olmasına rağmen kuyruk değiştiriyor, bazıları beklemekten sıkılıp gidiyordu; bu yüzden kayıtları sürekli düzeltmek zorunda kalıyor, zaman kaybı yaşıyorduk. Kameranın devreye girmesiyle bu problem aşıldı.</p>
+        <p>Hava şartları da bir sorundu; ATM'ler dışarıda olduğu için yağmurlu ve soğuk günlerde gözlem çok zorlaşıyordu. Meraklı insanların soruları dikkat dağıtıyordu. Kamerayı karşı dükkanlardan birine yerleştirdiğimizde, hem çekim devam ediyor hem de biz rahat nefes alıyorduk.</p>
+        <p>Uzun süre gözlem yapan kişinin dikkatinin dağılması da bir risk faktörüydü; "kafadan atma" veri girişi başlayabiliyordu. Kamera kaydı bu riski ortadan kaldırdı.</p>
+
+        <h3>Zaman <em>problemi</em></h3>
+        <p>En büyük kısıtımız zaman oldu. Mevsim farklılıkları, belirli ayların (örneğin Aralık) kendine has yoğunluk örüntüsü, ayın belirli günlerinin davranış farkı gibi faktörler uzun süreli bir çalışma gerektirir. Bir ödev kapsamındaki örneklemin popülasyonu temsil etme kapasitesi bu nedenle sınırlıdır.</p>
+
+        <h3>Bilgi <em>eksikliği</em></h3>
+        <p>Daha verimli bir veri toplama için çalışılan konu hakkında daha fazla bilgiye — örneğin banka personeliyle koordineli çalışmaya — ihtiyaç vardır. Bankalar bazı bilgileri paylaşmaktan doğal olarak kaçınır. Biz bankanın müdüründen izin almamıza rağmen dışarıdan gözlemci olmanın getirdiği bir çekingenlik yaşadık; bu da bazı bilgi boşluklarına yol açtı.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="sonuc">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-label">§ 09 — Sonuç</div>
+      <h2>Öneriler ve <em>değerlendirme.</em></h2>
+    </div>
+    <div class="section-body">
+      <div class="section-label secondary">Kapanış</div>
+      <div class="section-content">
+        <p>Bu çalışma gösterdi ki, hizmette kalite anlayışında olan ve müşteri kaybetmemek isteyen bir şirketin bu tür gözlemleri kendi uzman kadrosuyla sürekli yürütmesi gerekir. Özellikle İş Bankası gibi geniş bir müşteri kitlesine hizmet veren kurumların bu analizleri daimî olarak takip etmesi, müşteri memnuniyeti ve personel verimliliği açısından büyük yarar sağlar.</p>
+
+        <div class="pullquote">Yoğun bir sistem müşteriyi ne kadar rahatsız ederse, atıl kalmış bir sistem de şirkete o kadar zarar verir.</div>
+
+        <p>Elimizdeki veriler ışığında söyleyebileceğimiz, söz konusu gözlem periyodunda iki ATM'nin ihtiyacı karşılıyor olduğudur. Ancak hizmet sektöründe insan faktörünün değişkenliği göz önüne alındığında, veri ve bilgi tam olsaydı bile bu yorumun geçerliliği 2–3 ay veya en fazla 1 yıl ile sınırlı olurdu. Dolayısıyla özellikle yoğun şubelerde bu tür gözlemleri sürdüren uzman bir personel istihdamı, gerektiğinde hızlı müdahaleye imkan verir.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- M/M/c HESAP MAKİNESİ -->
+<section class="block" id="hesap">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-label">§ — İnteraktif</div>
+      <h2>M/M/c <em>hesap makinesi.</em></h2>
+    </div>
+    <div class="section-body">
+      <div class="section-label secondary">Canlı Hesap</div>
+      <div class="section-content" style="max-width: none;">
+        <p style="max-width: 72ch;">Aşağıdaki kaydırıcılarla varış hızı (λ), servis hızı (μ) ve sunucu sayısını (c) değiştirip kuyruk performans ölçülerini anlık olarak görün. Başlangıç değerleri çalışmamızdan alınmıştır.</p>
+
+        <div style="background:var(--paper-warm); border:1px solid var(--rule); padding:32px; margin:24px 0;">
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:28px; margin-bottom:32px;">
+            <div>
+              <label class="kpi-label" style="display:block; margin-bottom:8px;">λ (varış/saat)</label>
+              <input type="range" id="slLam" min="5" max="200" value="53" step="1" style="width:100%;">
+              <div style="font-family:'Fraunces',serif; font-size:32px; font-weight:500; color:var(--accent); margin-top:8px;" id="valLam">53</div>
+            </div>
+            <div>
+              <label class="kpi-label" style="display:block; margin-bottom:8px;">μ (servis/saat/sunucu)</label>
+              <input type="range" id="slMu" min="5" max="200" value="62" step="1" style="width:100%;">
+              <div style="font-family:'Fraunces',serif; font-size:32px; font-weight:500; color:var(--accent); margin-top:8px;" id="valMu">62</div>
+            </div>
+            <div>
+              <label class="kpi-label" style="display:block; margin-bottom:8px;">c (sunucu sayısı)</label>
+              <input type="range" id="slC" min="1" max="10" value="2" step="1" style="width:100%;">
+              <div style="font-family:'Fraunces',serif; font-size:32px; font-weight:500; color:var(--accent); margin-top:8px;" id="valC">2</div>
+            </div>
+          </div>
+
+          <div id="calcResults" class="kpi-grid" style="grid-template-columns:repeat(5,1fr); margin:0;">
+            <div class="kpi"><div class="kpi-label">ρ = λ/(cμ)</div><div class="kpi-value" id="resRho">—</div></div>
+            <div class="kpi"><div class="kpi-label">P₀</div><div class="kpi-value" id="resP0">—</div></div>
+            <div class="kpi"><div class="kpi-label">Lq (kuyruk)</div><div class="kpi-value" id="resLq">—</div></div>
+            <div class="kpi"><div class="kpi-label">Wq (dakika)</div><div class="kpi-value" id="resWq">—</div></div>
+            <div class="kpi"><div class="kpi-label">Ws (dakika)</div><div class="kpi-value" id="resWs">—</div></div>
+          </div>
+          <div id="calcWarn" style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent); margin-top:16px; display:none;">⚠ Sistem kararsız: ρ ≥ 1. Kuyruk sonsuza uzar.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="hazirlayanlar">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-label">§ — Künye</div>
+      <h2>Hazırlayanlar.</h2>
+    </div>
+    <div class="section-body">
+      <div class="section-label secondary">4. Sınıf</div>
+      <div class="section-content" style="max-width: none;">
+        <div class="authors">
+          <div class="author">
+            <div class="author-role">Ekonometri · 4. Sınıf</div>
+            <div class="author-name">Can Nafiz <em>Çevikel</em></div>
+            <div class="author-id">—</div>
+          </div>
+          <div class="author">
+            <div class="author-role">Ekonometri · 4. Sınıf</div>
+            <div class="author-name">Gazi Kemal <em>Pervane</em></div>
+            <div class="author-id">Öğr. No. 1999464040</div>
+          </div>
+          <div class="author">
+            <div class="author-role">Ekonometri · 4. Sınıf</div>
+            <div class="author-name">Özgen Tonay <em>Mete</em></div>
+            <div class="author-id">Öğr. No. 1998464034</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ack">
+  <div class="ack-inner">
+    <div class="section-label">§ — Teşekkür</div>
+    <div>
+      <blockquote>
+        Ödevin her aşamasında bize çok değerli katkılarıyla yol gösteren sayın Prof. Dr. Mustafa Güneş'e teşekkürü borç biliriz.
+      </blockquote>
+      <cite>— Hazırlayanlar</cite>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="kaynakca">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-label">§ — Kaynakça</div>
+      <h2>Kaynaklar.</h2>
+    </div>
+    <div class="section-body">
+      <div class="section-label secondary">Referanslar</div>
+      <div class="section-content" style="max-width: none;">
+        <ol class="refs">
+          <li data-n="01">CENGİZ, Yaşar Baki. <em>Yayınlanmamış Ders Notları.</em> Yıldız Teknik Üniversitesi, 1996.</li>
+          <li data-n="02">DOĞAN, İbrahim. <em>Yöneylem Araştırma Teknikleri ve İşletme Uygulamaları.</em> 2. Baskı, Bilim Teknik Yayınevi, İstanbul, 1995.</li>
+          <li data-n="03">ÖZTÜRK, Ahmet. <em>Yöneylem Araştırması.</em> 5. Baskı, Ekin Yayınları, Bursa, 1997.</li>
+          <li data-n="04">TAHA, A. Hamdy. <em>Yöneylem Araştırması.</em></li>
+          <li data-n="05">Banks, J. &amp; Carson, J. S. <em>Discrete-Event System Simulation.</em> Prentice-Hall, 1984.</li>
+          <li data-n="06">Altınçekiç, Özlem (No. 99035), Marmara Üniversitesi Sosyal Bilimler Enstitüsü.</li>
+          <li data-n="07">Benlidayı, Murat (No. 99029), Marmara Üniversitesi Sosyal Bilimler Enstitüsü.</li>
+          <li data-n="08">VAROL, A. <em>Simülasyon Ders Notları.</em> Fırat Üniversitesi.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <span>© Dokuz Eylül Üniversitesi · İİBF Ekonometri · Mayıs 2000</span>
+      <span class="bookmark"><kbd>Ctrl</kbd> + <kbd>D</kbd> · sayfayı yer imlerine ekler</span>
+      <span>v2.0 · rebuilt 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  const ink='#1a1f2e', accent='#8b2828', ochre='#a67c3d', green='#3d5a3a', rule='#c9c0ab';
+  const mono = 'JetBrains Mono, monospace';
+  const serif = 'Spectral, serif';
+  const defLeg = {position:'bottom',labels:{color:ink,font:{family:mono,size:11},boxWidth:12,boxHeight:12,padding:20}};
+  const defTip = {backgroundColor:ink,titleFont:{family:mono,size:11},bodyFont:{family:serif,size:13},padding:12};
+
+  // 1. Queue distribution chart (original section)
+  const qCtx = document.getElementById('queueChart');
+  if(qCtx) new Chart(qCtx, {
+    type:'bar',
+    data:{
+      labels:['0','1','2','3','4','5'],
+      datasets:[
+        {label:'Saha gözlemi (n=266)',data:[33.5,49.6,12.8,3.0,1.1,0],backgroundColor:accent,borderWidth:0,barPercentage:0.85,categoryPercentage:0.7},
+        {label:'DS simülasyonu',data:[24,29,18,11,6,4],backgroundColor:ochre,borderWidth:0,barPercentage:0.85,categoryPercentage:0.7}
+      ]
+    },
+    options:{responsive:true,aspectRatio:2.3,plugins:{legend:defLeg,tooltip:{...defTip,callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y}%`}}},scales:{x:{grid:{display:false},ticks:{color:ink,font:{family:mono,size:11}},border:{color:ink,width:1},title:{display:true,text:'Kuyruk uzunluğu (kişi)',font:{family:serif,size:13},color:ink}},y:{beginAtZero:true,max:55,grid:{color:rule},ticks:{color:ink,font:{family:mono,size:10},callback:v=>v+'%'},border:{display:false}}}}
+  });
+
+  // 2. Q-Q Plot — Interarrival times
+  const qqIat = [{"x":0.3,"y":1},{"x":1.4,"y":3},{"x":2.6,"y":5},{"x":3.8,"y":6},{"x":5,"y":8},{"x":6.2,"y":10},{"x":7.5,"y":10},{"x":8.8,"y":13},{"x":10.1,"y":15},{"x":11.4,"y":18},{"x":14.1,"y":20},{"x":16.9,"y":23},{"x":19.8,"y":29},{"x":22.9,"y":31},{"x":26.1,"y":34},{"x":29.4,"y":38},{"x":32.9,"y":41},{"x":36.6,"y":45},{"x":40.5,"y":49},{"x":44.6,"y":53},{"x":49,"y":59},{"x":53.6,"y":62},{"x":58.6,"y":66},{"x":63.9,"y":70},{"x":69.7,"y":72},{"x":75.9,"y":80},{"x":82.8,"y":85},{"x":90.4,"y":90},{"x":98.8,"y":93},{"x":108.4,"y":100},{"x":119.5,"y":110},{"x":132.6,"y":120},{"x":148.7,"y":130},{"x":169.4,"y":147},{"x":198.5,"y":180},{"x":248.4,"y":223},{"x":298.2,"y":289}];
+  const qqICtx = document.getElementById('qqIatChart');
+  if(qqICtx) new Chart(qqICtx, {
+    type:'scatter',
+    data:{
+      datasets:[
+        {label:'Gözlem vs. Üstel',data:qqIat,backgroundColor:accent,pointRadius:3,pointHoverRadius:5},
+        {label:'y = x (ideal)',data:[{x:0,y:0},{x:320,y:320}],type:'line',borderColor:rule,borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false}
+      ]
+    },
+    options:{responsive:true,aspectRatio:1.8,plugins:{legend:defLeg,tooltip:defTip},scales:{x:{title:{display:true,text:'Teorik kuantiller (üstel)',font:{family:serif,size:13},color:ink},grid:{color:rule},ticks:{color:ink,font:{family:mono,size:10}},border:{color:ink,width:1}},y:{title:{display:true,text:'Gözlem kuantilleri (sn)',font:{family:serif,size:13},color:ink},grid:{color:rule},ticks:{color:ink,font:{family:mono,size:10}},border:{display:false}}}}
+  });
+
+  // 3. Q-Q Plot — Service times
+  const qqSrv = [{"x":0.2,"y":2},{"x":1.1,"y":7},{"x":2.9,"y":14},{"x":4.7,"y":17},{"x":6.6,"y":20},{"x":8.6,"y":24},{"x":10.6,"y":28},{"x":12.8,"y":30},{"x":15,"y":33},{"x":17.2,"y":34},{"x":19.6,"y":36},{"x":22.1,"y":38},{"x":24.7,"y":39},{"x":27.4,"y":41},{"x":30.3,"y":42},{"x":33.3,"y":44},{"x":36.4,"y":45},{"x":39.8,"y":46},{"x":43.3,"y":47},{"x":47.1,"y":50},{"x":51.2,"y":50},{"x":55.5,"y":52},{"x":60.2,"y":56},{"x":65.4,"y":60},{"x":71,"y":63},{"x":77.2,"y":66},{"x":84.2,"y":73},{"x":92.2,"y":77},{"x":101.5,"y":81},{"x":112.5,"y":93},{"x":126.1,"y":100},{"x":144,"y":116},{"x":170.1,"y":142},{"x":219,"y":188},{"x":282.3,"y":255}];
+  const qqSCtx = document.getElementById('qqSrvChart');
+  if(qqSCtx) new Chart(qqSCtx, {
+    type:'scatter',
+    data:{
+      datasets:[
+        {label:'Gözlem vs. Üstel',data:qqSrv,backgroundColor:green,pointRadius:3,pointHoverRadius:5},
+        {label:'y = x (ideal)',data:[{x:0,y:0},{x:300,y:300}],type:'line',borderColor:rule,borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false}
+      ]
+    },
+    options:{responsive:true,aspectRatio:1.8,plugins:{legend:defLeg,tooltip:defTip},scales:{x:{title:{display:true,text:'Teorik kuantiller (üstel)',font:{family:serif,size:13},color:ink},grid:{color:rule},ticks:{color:ink,font:{family:mono,size:10}},border:{color:ink,width:1}},y:{title:{display:true,text:'Gözlem kuantilleri (sn)',font:{family:serif,size:13},color:ink},grid:{color:rule},ticks:{color:ink,font:{family:mono,size:10}},border:{display:false}}}}
+  });
+
+  // 4. Time series — queue length by observation index
+  const tsData = [0,1,1,1,1,1,2,1,0,0,0,0,0,0,0,1,1,0,0,1,1,1,1,1,2,1,0,1,1,1,1,1,1,0,1,0,0,0,1,0,1,1,0,1,1,1,1,1,1,0,0,0,1,1,2,1,1,2,1,0,1,1,0,1,2,1,2,3,3,1,2,1,0,1,0,1,2,0,1,2,2,0,1,0,1,2,1,1,0,1,2,4,3,3,1,2,2,2,1,1,1,1,1,1,1,0,1,0,2,1,1,2,2,1,0,1,1,0,1,0,0,1,1,2,1,2,1,2,4,0,1,0,1,0];
+  const tsCtx = document.getElementById('tsChart');
+  if(tsCtx) new Chart(tsCtx, {
+    type:'line',
+    data:{
+      labels: tsData.map((_,i)=>i%20===0?i:''),
+      datasets:[{
+        label:'Kuyruk uzunluğu',
+        data:tsData,
+        borderColor:accent,
+        backgroundColor:'rgba(139,40,40,0.12)',
+        borderWidth:1.5,
+        pointRadius:0,
+        fill:true,
+        tension:0.2,
+        stepped:'middle'
+      }]
+    },
+    options:{responsive:true,aspectRatio:3,plugins:{legend:defLeg,tooltip:defTip},scales:{x:{grid:{display:false},ticks:{color:ink,font:{family:mono,size:10}},border:{color:ink,width:1},title:{display:true,text:'Gözlem sırası',font:{family:serif,size:13},color:ink}},y:{beginAtZero:true,max:5,grid:{color:rule},ticks:{color:ink,font:{family:mono,size:10},stepSize:1},border:{display:false},title:{display:true,text:'Kuyruk (kişi)',font:{family:serif,size:13},color:ink}}}}
+  });
+
+  // 5. Triple comparison chart
+  const triCtx = document.getElementById('tripleChart');
+  if(triCtx) new Chart(triCtx, {
+    type:'bar',
+    data:{
+      labels:['0','1','2','3','4','5'],
+      datasets:[
+        {label:'M/M/2 Teorik',data:[40.51,34.30,14.52,6.15,2.60,1.10],backgroundColor:green,borderWidth:0,barPercentage:0.9,categoryPercentage:0.75},
+        {label:'Saha gözlemi',data:[33.5,49.6,12.8,3.0,1.1,0],backgroundColor:accent,borderWidth:0,barPercentage:0.9,categoryPercentage:0.75},
+        {label:'DS simülasyonu',data:[24,29,18,11,6,4],backgroundColor:ochre,borderWidth:0,barPercentage:0.9,categoryPercentage:0.75}
+      ]
+    },
+    options:{responsive:true,aspectRatio:2.3,plugins:{legend:defLeg,tooltip:{...defTip,callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y}%`}}},scales:{x:{grid:{display:false},ticks:{color:ink,font:{family:mono,size:11}},border:{color:ink,width:1},title:{display:true,text:'Kuyruk uzunluğu (kişi)',font:{family:serif,size:13},color:ink}},y:{beginAtZero:true,max:55,grid:{color:rule},ticks:{color:ink,font:{family:mono,size:10},callback:v=>v+'%'},border:{display:false}}}}
+  });
+
+  // 6. M/M/c Calculator
+  function factorial(n){let r=1;for(let i=2;i<=n;i++)r*=i;return r;}
+
+  function calcMMc(){
+    const lam = +document.getElementById('slLam').value;
+    const mu  = +document.getElementById('slMu').value;
+    const c   = +document.getElementById('slC').value;
+    document.getElementById('valLam').textContent = lam;
+    document.getElementById('valMu').textContent = mu;
+    document.getElementById('valC').textContent = c;
+
+    const r = lam / mu;
+    const rho = r / c;
+    const warn = document.getElementById('calcWarn');
+
+    if(rho >= 1){
+      warn.style.display = 'block';
+      document.getElementById('resRho').innerHTML = '<em>'+rho.toFixed(3)+'</em>';
+      ['resP0','resLq','resWq','resWs'].forEach(id=>{document.getElementById(id).innerHTML='<em>∞</em>';});
+      return;
+    }
+    warn.style.display = 'none';
+
+    let sum = 0;
+    for(let n=0;n<c;n++) sum += Math.pow(r,n)/factorial(n);
+    const last = Math.pow(r,c)/(factorial(c)*(1-rho));
+    const P0 = 1/(sum+last);
+    const Lq = (Math.pow(r,c+1)*P0) / (factorial(c-1)*Math.pow(c-r,2));
+    const Wq = Lq/lam*60;
+    const Ws = Wq + 60/mu;
+
+    document.getElementById('resRho').innerHTML = '<em>'+rho.toFixed(3)+'</em>';
+    document.getElementById('resP0').innerHTML = '<em>'+(P0*100).toFixed(1)+'%</em>';
+    document.getElementById('resLq').innerHTML = '<em>'+Lq.toFixed(2)+'</em>';
+    document.getElementById('resWq').innerHTML = '<em>'+Wq.toFixed(1)+'</em>';
+    document.getElementById('resWs').innerHTML = '<em>'+Ws.toFixed(1)+'</em>';
+  }
+
+  ['slLam','slMu','slC'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', calcMMc);
+  });
+  calcMMc();
+});
+</script>
+
+</body>
+</html>
