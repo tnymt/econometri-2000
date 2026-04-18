@@ -40,4 +40,4 @@ Tek dosya, saf HTML/CSS/JS. Harici bağımlılıklar:
 
 ---
 
-*Orijinal çalışma Mayıs 2000'de plain HTML ile yayınlanmıştı. Bu sürüm 2026'da Claude yardımıyla yeniden tasarlanmıştır.*
+*Orijinal çalışma Mayıs 2000'de plain HTML ile yayınlanmıştı. *
