@@ -1,0 +1,18 @@
+{
+  "name": "econometri-2000",
+  "version": "1.0.0",
+  "description": "İş Bankası Buca Şubesi ATM Kuyruk Simülasyonu — test suite",
+  "scripts": {
+    "test": "jest --coverage"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coverageDirectory": "coverage",
+    "collectCoverageFrom": [
+      "src/**/*.js"
+    ]
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}
