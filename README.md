@@ -24,9 +24,9 @@ Bu repo, 2000 yılında Dokuz Eylül Üniversitesi Ekonometri bölümünde hazı
 
 | İsim | Öğr. No. |
 |------|----------|
-| Can Nafiz Çevikel | — |
-| Gazi Kemal Pervane | 1999464040 |
-| Özgen Tonay Mete | 1998464034 |
+| Can Nafiz Çevikel |
+| Gazi Kemal Pervane |
+| Özgen Tonay Mete |
 
 ## Teknoloji
 
