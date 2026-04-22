@@ -22,8 +22,8 @@ Bu repo, 2000 yılında Dokuz Eylül Üniversitesi Ekonometri bölümünde hazı
 
 ## Hazırlayanlar
 
-| İsim | Öğr. No. |
-|------|----------|
+| İsim | 
+|------|
 | Can Nafiz Çevikel |
 | Gazi Kemal Pervane |
 | Özgen Tonay Mete |
